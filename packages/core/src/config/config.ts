@@ -1,6 +1,7 @@
 import type { Prettify } from "@/types/utils.js";
 import type { Abi } from "abitype";
 import type { Narrow, Transport } from "viem";
+import type { z } from "zod";
 import type { GetAddress } from "./address.js";
 import type { GetEventFilter } from "./eventFilter.js";
 import type { NonStrictPick } from "./utilityTypes.js";
@@ -68,6 +69,45 @@ export type NetworkConfig<network> = {
   maxHistoricalTaskConcurrency?: number;
   /** Disable RPC request caching. Default: `false`. */
   disableCache?: boolean;
+};
+
+type KafkaTopicConfig<
+  topic extends string = string,
+  schema extends z.ZodObject<any> = z.ZodObject<any>,
+> = {
+  messageSchema: new () => schema;
+  topic: topic;
+};
+
+export type KafkaTopicsConfig<topics extends Record<string, object>> =
+  {} extends topics
+    ? {}
+    : {
+        [topic in keyof topics as string extends topic
+          ? never
+          : topic]: KafkaTopicConfig<
+          Extract<topic, string>,
+          Extract<topics[topic], z.ZodObject<any>>
+        >;
+      };
+
+type KafkaConfig<
+  topics extends Record<string, z.ZodObject<any>> = Record<
+    string,
+    z.ZodObject<any>
+  >,
+> = {
+  cluster?: {
+    // KAFKA_BOOTSTRAP_SERVERS envvar
+    bootstrapServers?: string;
+    sasl?: {
+      // KAFKA_USERNAME envvar
+      username: string;
+      // KAFKA_PASSWORD envvar
+      password: string;
+    };
+  };
+  topics: KafkaTopicsConfig<topics>;
 };
 
 export type BlockFilterConfig = {
@@ -204,6 +244,7 @@ export const createConfig = <
   networks: NetworksConfig<Narrow<networks>>;
   contracts?: ContractsConfig<networks, Narrow<contracts>>;
   database?: DatabaseConfig;
+  kafka?: KafkaConfig;
   options?: OptionsConfig;
   blocks?: BlockFiltersConfig<networks, blocks>;
 }): CreateConfigReturnType<networks, contracts, blocks> =>
@@ -213,6 +254,7 @@ export type Config = {
   networks: { [networkName: string]: NetworkConfig<unknown> };
   contracts: { [contractName: string]: GetContract };
   database?: DatabaseConfig;
+  kafka?: KafkaConfig;
   options?: OptionsConfig;
   blocks: {
     [sourceName: string]: GetBlockFilter<unknown>;
@@ -223,6 +265,7 @@ export type CreateConfigReturnType<networks, contracts, blocks> = {
   networks: networks;
   contracts: contracts;
   database?: DatabaseConfig;
+  kafka?: KafkaConfig;
   options?: OptionsConfig;
   blocks: blocks;
 };

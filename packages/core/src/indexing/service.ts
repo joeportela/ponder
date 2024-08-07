@@ -9,6 +9,7 @@ import {
   sourceIsLog,
 } from "@/config/sources.js";
 import type { IndexingStore } from "@/indexing-store/store.js";
+import type { KafkaService } from "@/kafka/service.js";
 import type { Schema } from "@/schema/common.js";
 import type { SyncService } from "@/sync/index.js";
 import type { DatabaseModel } from "@/types/model.js";
@@ -91,6 +92,7 @@ export const create = ({
   common,
   sources,
   networks,
+  kafkaService,
   syncService,
   indexingStore,
   schema,
@@ -99,10 +101,13 @@ export const create = ({
   common: Common;
   sources: EventSource[];
   networks: Network[];
+  kafkaService?: KafkaService;
   syncService: SyncService;
   indexingStore: IndexingStore;
   schema: Schema;
 }): Service => {
+  kafkaService?.setup();
+
   const contextState: Service["currentEvent"]["contextState"] = {
     encodedCheckpoint: undefined!,
     blockNumber: undefined!,

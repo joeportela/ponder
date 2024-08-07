@@ -5,6 +5,7 @@ import type { Common } from "@/common/common.js";
 import { BuildError } from "@/common/errors.js";
 import type { Config, OptionsConfig } from "@/config/config.js";
 import type { DatabaseConfig } from "@/config/database.js";
+import type { KafkaConfig } from "@/config/kafka.js";
 import type { Network } from "@/config/networks.js";
 import type { EventSource } from "@/config/sources.js";
 import { buildGraphQLSchema } from "@/graphql/buildGraphqlSchema.js";
@@ -52,6 +53,7 @@ type BaseBuild = {
   optionsConfig: OptionsConfig;
   sources: EventSource[];
   networks: Network[];
+  kafkaConfig?: KafkaConfig;
   // Schema
   schema: Schema;
   graphqlSchema: GraphQLSchema;
@@ -664,6 +666,7 @@ const validateAndBuild = async (
     build: {
       buildId,
       databaseConfig: buildConfigAndIndexingFunctionsResult.databaseConfig,
+      kafkaConfig: buildConfigAndIndexingFunctionsResult.kafkaConfig,
       optionsConfig: buildConfigAndIndexingFunctionsResult.optionsConfig,
       networks: buildConfigAndIndexingFunctionsResult.networks,
       sources: buildConfigAndIndexingFunctionsResult.sources,

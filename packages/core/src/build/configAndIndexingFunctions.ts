@@ -9,6 +9,7 @@ import {
 import type { Config } from "@/config/config.js";
 import type { DatabaseConfig } from "@/config/database.js";
 import { buildChildAddressCriteria } from "@/config/factories.js";
+import type { KafkaConfig } from "@/config/kafka.js";
 import {
   type Network,
   getDefaultMaxBlockRange,
@@ -876,10 +877,57 @@ export async function buildConfigAndIndexingFunctions({
     });
   }
 
+  let kafkaConfig: KafkaConfig | undefined;
+  if (config.kafka?.topics) {
+    // We have topics defined, so we need to setup Kafka
+    let bootstrapServers: string[];
+    if (config.kafka.cluster?.bootstrapServers) {
+      bootstrapServers = config.kafka.cluster.bootstrapServers.split(",");
+    } else if (process.env.KAFKA_BOOTSTRAP_SERVERS) {
+      bootstrapServers = process.env.KAFKA_BOOTSTRAP_SERVERS.split(",");
+    } else {
+      throw new Error(
+        "No kafka bootstrap servers defined in config or env var",
+      );
+    }
+
+    let username: string;
+    if (config.kafka.cluster?.sasl?.username) {
+      username = config.kafka.cluster.sasl.username;
+    } else if (process.env.KAFKA_USERNAME) {
+      username = process.env.KAFKA_USERNAME;
+    } else {
+      throw new Error("No kafka username defined in config or env var");
+    }
+
+    let password: string;
+    if (config.kafka.cluster?.sasl?.password) {
+      password = config.kafka.cluster.sasl.password;
+    } else if (process.env.KAFKA_PASSWORD) {
+      password = process.env.KAFKA_PASSWORD;
+    } else {
+      throw new Error("No kafka password defined in config or env var");
+    }
+
+    kafkaConfig = {
+      cluster: {
+        brokers: bootstrapServers,
+        sasl: {
+          username,
+          password,
+        },
+      },
+      topics: config.kafka.topics,
+    };
+  } else {
+    kafkaConfig = undefined;
+  }
+
   return {
     databaseConfig,
     optionsConfig,
     networks: networksWithSources,
+    kafkaConfig,
     sources,
     indexingFunctions,
     logs,
@@ -908,6 +956,7 @@ export async function safeBuildConfigAndIndexingFunctions({
       networks: result.networks,
       indexingFunctions: result.indexingFunctions,
       databaseConfig: result.databaseConfig,
+      kafkaConfig: result.kafkaConfig,
       optionsConfig: result.optionsConfig,
       logs: result.logs,
     } as const;
