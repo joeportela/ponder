@@ -43,6 +43,7 @@ export type Context = {
   network: { chainId: number; name: string };
   client: ReadOnlyClient;
   db: Record<string, DatabaseModel<UserRecord>>;
+  kafkaService: KafkaService | undefined;
   contracts: Record<
     string,
     {
@@ -194,6 +195,7 @@ export const create = ({
         contracts: undefined!,
         client: undefined!,
         db,
+        kafkaService,
       },
     },
     networkByChainId,

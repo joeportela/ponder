@@ -115,8 +115,12 @@ export async function run({
   await database.migrateSyncStore();
 
   const kafkaService: KafkaService | undefined = kafkaConfig
-    ? new KafkaService({ kafkaConfig })
+    ? new KafkaService({ common, kafkaConfig })
     : undefined;
+
+  if (kafkaService) {
+    await kafkaService.setup();
+  }
 
   runCodegen({ common, graphqlSchema });
 
