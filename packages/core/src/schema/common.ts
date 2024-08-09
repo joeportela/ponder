@@ -98,7 +98,10 @@ export type Schema = {
 };
 
 export type KafkaTopicSchema = {
-  [eventName: string]: { topic: string; messageSchema: z.ZodObject<any> };
+  [eventName: string]: {
+    topic: string;
+    messageSchema: z.ZodObject<z.ZodRawShape>;
+  };
 };
 
 export type ExtractTableNames<

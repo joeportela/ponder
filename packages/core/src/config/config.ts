@@ -71,40 +71,16 @@ export type NetworkConfig<network> = {
   disableCache?: boolean;
 };
 
-type GetKafkaTopicConfig<
-  topics,
-  ///
-  allTopicsNames extends string = [keyof topics] extends [never]
-    ? string
-    : keyof topics & string,
-> = topics extends {
-  [eventName in allTopicsNames]: infer topicConfig;
-}
-  ? topicConfig
-  : never;
-
-export type KafkaTopicConfig<
-  topic extends string = string,
-  schema extends z.ZodObject<z.ZodRawShape> = z.ZodObject<z.ZodRawShape>,
-> = {
-  messageSchema: schema;
-  topic: topic;
+export type KafkaTopicConfig = {
+  messageSchema: z.ZodObject<z.ZodRawShape>;
+  topic: string;
 };
-
-// export type KafkaTopicsConfig = Record<string, KafkaTopicConfig>;
 
 export type KafkaTopicsConfig<topics> = {} extends topics
   ? {}
   : {
-      [eventName in keyof topics]: GetKafkaTopicConfig<topics[eventName]>;
+      [eventName in keyof topics]: KafkaTopicConfig;
     };
-// [networkName in keyof networks]: NetworkConfig<networks[networkName]>;
-
-// type NetworksConfig<networks> = {} extends networks
-//   ? {}
-//   : {
-//       [networkName in keyof networks]: NetworkConfig<networks[networkName]>;
-//     };
 
 type KafkaClusterConfig = {
   // KAFKA_BOOTSTRAP_SERVERS envvar
