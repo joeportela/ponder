@@ -71,43 +71,50 @@ export type NetworkConfig<network> = {
   disableCache?: boolean;
 };
 
-type KafkaTopicConfig<
+type GetKafkaTopicConfig<
+  topics,
+  ///
+  allTopicsNames extends string = [keyof topics] extends [never]
+    ? string
+    : keyof topics & string,
+> = topics extends {
+  [eventName in allTopicsNames]: infer topicConfig;
+}
+  ? topicConfig
+  : never;
+
+export type KafkaTopicConfig<
   topic extends string = string,
-  schema extends z.ZodObject<any> = z.ZodObject<any>,
+  schema extends z.ZodObject<z.ZodRawShape> = z.ZodObject<z.ZodRawShape>,
 > = {
-  messageSchema: new () => schema;
+  messageSchema: schema;
   topic: topic;
 };
 
-export type KafkaTopicsConfig<topics extends Record<string, object>> =
-  {} extends topics
-    ? {}
-    : {
-        [topic in keyof topics as string extends topic
-          ? never
-          : topic]: KafkaTopicConfig<
-          Extract<topic, string>,
-          Extract<topics[topic], z.ZodObject<any>>
-        >;
-      };
+// export type KafkaTopicsConfig = Record<string, KafkaTopicConfig>;
 
-type KafkaConfig<
-  topics extends Record<string, z.ZodObject<any>> = Record<
-    string,
-    z.ZodObject<any>
-  >,
-> = {
-  cluster?: {
-    // KAFKA_BOOTSTRAP_SERVERS envvar
-    bootstrapServers?: string;
-    sasl?: {
-      // KAFKA_USERNAME envvar
-      username: string;
-      // KAFKA_PASSWORD envvar
-      password: string;
+export type KafkaTopicsConfig<topics> = {} extends topics
+  ? {}
+  : {
+      [eventName in keyof topics]: GetKafkaTopicConfig<topics[eventName]>;
     };
+// [networkName in keyof networks]: NetworkConfig<networks[networkName]>;
+
+// type NetworksConfig<networks> = {} extends networks
+//   ? {}
+//   : {
+//       [networkName in keyof networks]: NetworkConfig<networks[networkName]>;
+//     };
+
+type KafkaClusterConfig = {
+  // KAFKA_BOOTSTRAP_SERVERS envvar
+  brokers?: string;
+  sasl?: {
+    // KAFKA_USERNAME envvar
+    username: string;
+    // KAFKA_PASSWORD envvar
+    password: string;
   };
-  topics: KafkaTopicsConfig<topics>;
 };
 
 export type BlockFilterConfig = {
@@ -239,33 +246,39 @@ export const createConfig = <
   const networks,
   const contracts = {},
   const blocks = {},
+  const topics = {},
 >(config: {
   // TODO: add jsdoc to these properties.
   networks: NetworksConfig<Narrow<networks>>;
   contracts?: ContractsConfig<networks, Narrow<contracts>>;
   database?: DatabaseConfig;
-  kafka?: KafkaConfig;
+  kafkaCluster?: KafkaClusterConfig;
+  kafkaTopics: KafkaTopicsConfig<topics>;
   options?: OptionsConfig;
   blocks?: BlockFiltersConfig<networks, blocks>;
-}): CreateConfigReturnType<networks, contracts, blocks> =>
-  config as Prettify<CreateConfigReturnType<networks, contracts, blocks>>;
+}): CreateConfigReturnType<networks, contracts, blocks, topics> =>
+  config as Prettify<
+    CreateConfigReturnType<networks, contracts, blocks, topics>
+  >;
 
 export type Config = {
   networks: { [networkName: string]: NetworkConfig<unknown> };
   contracts: { [contractName: string]: GetContract };
   database?: DatabaseConfig;
-  kafka?: KafkaConfig;
+  kafkaCluster?: KafkaClusterConfig;
+  kafkaTopics: { [eventName: string]: KafkaTopicConfig };
   options?: OptionsConfig;
   blocks: {
     [sourceName: string]: GetBlockFilter<unknown>;
   };
 };
 
-export type CreateConfigReturnType<networks, contracts, blocks> = {
+export type CreateConfigReturnType<networks, contracts, blocks, topics> = {
   networks: networks;
   contracts: contracts;
   database?: DatabaseConfig;
-  kafka?: KafkaConfig;
+  kafkaCluster?: KafkaClusterConfig;
+  kafkaTopics: topics;
   options?: OptionsConfig;
   blocks: blocks;
 };

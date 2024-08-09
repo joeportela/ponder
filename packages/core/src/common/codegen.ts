@@ -13,8 +13,9 @@ declare module "@/generated" {
 
   type config = typeof import("./ponder.config.ts").default;
   type schema = typeof import("./ponder.schema.ts").default;
+  type topicSchema = typeof import("./ponder.config.ts").default.kafka.topics;
 
-  export const ponder: Virtual.Registry<config, schema>;
+  export const ponder: Virtual.Registry<config, schema, topicSchema>;
 
   export type EventNames = Virtual.EventNames<config>;
   export type Event<name extends EventNames = EventNames> = Virtual.Event<
@@ -24,11 +25,12 @@ declare module "@/generated" {
   export type Context<name extends EventNames = EventNames> = Virtual.Context<
     config,
     schema,
+    topicSchema,
     name
   >;
   export type ApiContext = Virtual.Drizzle<schema>;
   export type IndexingFunctionArgs<name extends EventNames = EventNames> =
-    Virtual.IndexingFunctionArgs<config, schema, name>;
+    Virtual.IndexingFunctionArgs<config, schema, topicSchema, name>;
   export type Schema = Virtual.Schema<schema>;
 }
 `;

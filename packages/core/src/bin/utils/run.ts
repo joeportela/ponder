@@ -57,12 +57,13 @@ export async function run({
   const {
     buildId,
     databaseConfig,
-    kafkaConfig,
+    kafkaClusterConfig,
     optionsConfig,
     networks,
     sources,
     graphqlSchema,
     schema,
+    topicSchema,
     indexingFunctions,
   } = build;
 
@@ -114,8 +115,12 @@ export async function run({
   // starting the server so the app can become responsive more quickly.
   await database.migrateSyncStore();
 
-  const kafkaService: KafkaService | undefined = kafkaConfig
-    ? new KafkaService({ common, kafkaConfig })
+  const kafkaService: KafkaService | undefined = kafkaClusterConfig
+    ? new KafkaService({
+        common,
+        clusterConfig: kafkaClusterConfig,
+        topicSchema,
+      })
     : undefined;
 
   if (kafkaService) {
@@ -237,6 +242,7 @@ export async function run({
     kafkaService,
     syncService,
     schema,
+    topicSchema,
   });
 
   const start = async () => {

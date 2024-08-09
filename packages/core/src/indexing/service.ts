@@ -9,8 +9,9 @@ import {
   sourceIsLog,
 } from "@/config/sources.js";
 import type { IndexingStore } from "@/indexing-store/store.js";
+import { type KafkaTopicProducer, buildKafka } from "@/kafka/action.js";
 import type { KafkaService } from "@/kafka/service.js";
-import type { Schema } from "@/schema/common.js";
+import type { KafkaTopicSchema, Schema } from "@/schema/common.js";
 import type { SyncService } from "@/sync/index.js";
 import type { DatabaseModel } from "@/types/model.js";
 import type { UserRecord } from "@/types/schema.js";
@@ -25,6 +26,7 @@ import { prettyPrint } from "@/utils/print.js";
 import { startClock } from "@/utils/timer.js";
 import type { Abi, Address } from "viem";
 import { checksumAddress, createClient } from "viem";
+import type { z } from "zod";
 import type {
   BlockEvent,
   CallTraceEvent,
@@ -43,7 +45,7 @@ export type Context = {
   network: { chainId: number; name: string };
   client: ReadOnlyClient;
   db: Record<string, DatabaseModel<UserRecord>>;
-  kafkaService: KafkaService | undefined;
+  kafka: Record<string, KafkaTopicProducer<z.ZodObject<any>>>;
   contracts: Record<
     string,
     {
@@ -97,6 +99,7 @@ export const create = ({
   syncService,
   indexingStore,
   schema,
+  topicSchema,
 }: {
   indexingFunctions: IndexingFunctions;
   common: Common;
@@ -106,6 +109,7 @@ export const create = ({
   syncService: SyncService;
   indexingStore: IndexingStore;
   schema: Schema;
+  topicSchema: KafkaTopicSchema;
 }): Service => {
   kafkaService?.setup();
 
@@ -181,6 +185,8 @@ export const create = ({
     }
   }
 
+  const kafka = buildKafka({ kafkaService, topicSchema });
+
   return {
     common,
     indexingFunctions,
@@ -195,7 +201,7 @@ export const create = ({
         contracts: undefined!,
         client: undefined!,
         db,
-        kafkaService,
+        kafka,
       },
     },
     networkByChainId,

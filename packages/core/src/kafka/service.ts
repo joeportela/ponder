@@ -1,42 +1,51 @@
 import type { Common } from "@/common/common.js";
-import type { KafkaConfig } from "@/config/kafka.js";
-import { type Admin, Kafka, type Producer, logLevel } from "kafkajs";
+import type { KafkaClusterConfig } from "@/config/kafka.js";
+import type { KafkaTopicSchema } from "@/schema/common.js";
+import {
+  type Admin,
+  Kafka,
+  type Message,
+  type Producer,
+  logLevel,
+} from "kafkajs";
 
 export class KafkaService {
   private common: Common;
 
-  private kafkaConfig: KafkaConfig;
   private kafka: Kafka;
   private admin: Admin;
   private producer: Producer;
+  private topicSchema: KafkaTopicSchema;
 
   constructor({
     common,
-    kafkaConfig,
+    clusterConfig,
+    topicSchema,
   }: {
     common: Common;
-    kafkaConfig: KafkaConfig;
+    clusterConfig: KafkaClusterConfig;
+    topicSchema: KafkaTopicSchema;
   }) {
     this.common = common;
 
-    this.kafkaConfig = kafkaConfig;
     this.kafka = new Kafka({
       clientId: "ponder",
-      brokers: kafkaConfig.cluster.brokers,
+      brokers: clusterConfig.brokers,
       ssl: true,
       sasl: {
         mechanism: "scram-sha-256",
-        username: kafkaConfig.cluster.sasl.username,
-        password: kafkaConfig.cluster.sasl.password,
+        username: clusterConfig.sasl.username,
+        password: clusterConfig.sasl.password,
       },
       logLevel: logLevel.INFO,
     });
     this.admin = this.kafka.admin();
     this.producer = this.kafka.producer();
+    this.topicSchema = topicSchema;
   }
 
   async setup(): Promise<void> {
-    const producerTopics = Object.keys(this.kafkaConfig.topics);
+    const producerTopics = Object.keys(this.topicSchema);
     const serverTopics = await this.admin.listTopics();
     for (const topic of producerTopics) {
       if (!serverTopics.includes(topic)) {
@@ -61,10 +70,10 @@ export class KafkaService {
     });
   }
 
-  async send(): Promise<void> {
-    this.producer.send({
-      topic: "foobar",
-      messages: [],
+  async send(topic: string, messages: Message[]): Promise<void> {
+    await this.producer.send({
+      topic,
+      messages,
     });
   }
 }

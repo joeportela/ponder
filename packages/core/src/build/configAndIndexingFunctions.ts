@@ -9,7 +9,7 @@ import {
 import type { Config } from "@/config/config.js";
 import type { DatabaseConfig } from "@/config/database.js";
 import { buildChildAddressCriteria } from "@/config/factories.js";
-import type { KafkaConfig } from "@/config/kafka.js";
+import type { KafkaClusterConfig } from "@/config/kafka.js";
 import {
   type Network,
   getDefaultMaxBlockRange,
@@ -26,6 +26,7 @@ import {
   sourceIsCallTrace,
   sourceIsFactoryCallTrace,
 } from "@/config/sources.js";
+import type { KafkaTopicSchema } from "@/schema/common.js";
 import { chains } from "@/utils/chains.js";
 import { toLowerCase } from "@/utils/lowercase.js";
 import { dedupe } from "@ponder/common";
@@ -877,12 +878,12 @@ export async function buildConfigAndIndexingFunctions({
     });
   }
 
-  let kafkaConfig: KafkaConfig | undefined;
-  if (config.kafka?.topics) {
+  let kafkaClusterConfig: KafkaClusterConfig | undefined;
+  if (config.kafkaTopics) {
     // We have topics defined, so we need to setup Kafka
     let bootstrapServers: string[];
-    if (config.kafka.cluster?.bootstrapServers) {
-      bootstrapServers = config.kafka.cluster.bootstrapServers.split(",");
+    if (config.kafkaCluster?.brokers) {
+      bootstrapServers = config.kafkaCluster.brokers.split(",");
     } else if (process.env.KAFKA_BOOTSTRAP_SERVERS) {
       bootstrapServers = process.env.KAFKA_BOOTSTRAP_SERVERS.split(",");
     } else {
@@ -892,8 +893,8 @@ export async function buildConfigAndIndexingFunctions({
     }
 
     let username: string;
-    if (config.kafka.cluster?.sasl?.username) {
-      username = config.kafka.cluster.sasl.username;
+    if (config.kafkaCluster?.sasl?.username) {
+      username = config.kafkaCluster.sasl.username;
     } else if (process.env.KAFKA_USERNAME) {
       username = process.env.KAFKA_USERNAME;
     } else {
@@ -901,33 +902,30 @@ export async function buildConfigAndIndexingFunctions({
     }
 
     let password: string;
-    if (config.kafka.cluster?.sasl?.password) {
-      password = config.kafka.cluster.sasl.password;
+    if (config.kafkaCluster?.sasl?.password) {
+      password = config.kafkaCluster.sasl.password;
     } else if (process.env.KAFKA_PASSWORD) {
       password = process.env.KAFKA_PASSWORD;
     } else {
       throw new Error("No kafka password defined in config or env var");
     }
 
-    kafkaConfig = {
-      cluster: {
-        brokers: bootstrapServers,
-        sasl: {
-          username,
-          password,
-        },
+    kafkaClusterConfig = {
+      brokers: bootstrapServers,
+      sasl: {
+        username,
+        password,
       },
-      topics: config.kafka.topics,
     };
   } else {
-    kafkaConfig = undefined;
+    kafkaClusterConfig = undefined;
   }
 
   return {
     databaseConfig,
     optionsConfig,
     networks: networksWithSources,
-    kafkaConfig,
+    kafkaClusterConfig,
     sources,
     indexingFunctions,
     logs,
@@ -956,7 +954,7 @@ export async function safeBuildConfigAndIndexingFunctions({
       networks: result.networks,
       indexingFunctions: result.indexingFunctions,
       databaseConfig: result.databaseConfig,
-      kafkaConfig: result.kafkaConfig,
+      kafkaClusterConfig: result.kafkaClusterConfig,
       optionsConfig: result.optionsConfig,
       logs: result.logs,
     } as const;
@@ -970,4 +968,10 @@ export async function safeBuildConfigAndIndexingFunctions({
 function getDatabaseName(connectionString: string) {
   const parsed = (parse as unknown as typeof parse.parse)(connectionString);
   return `${parsed.host}:${parsed.port}/${parsed.database}`;
+}
+
+export function buildKafkaTopicSchema({
+  config,
+}: { config: Config }): KafkaTopicSchema {
+  return config.kafkaTopics;
 }

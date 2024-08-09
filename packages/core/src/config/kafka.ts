@@ -1,6 +1,3 @@
-import type { z } from "zod";
-import type { KafkaTopicsConfig } from "./config.js";
-
 export type KafkaClusterConfig = {
   brokers: string[];
   sasl: {
@@ -9,30 +6,33 @@ export type KafkaClusterConfig = {
   };
 };
 
-export type KafkaConfig<
-  topics extends Record<string, z.ZodObject<any>> = Record<
-    string,
-    z.ZodObject<any>
-  >,
-> = {
-  cluster: KafkaClusterConfig;
-  topics: KafkaTopicsConfig<topics>;
-};
+// export type KafkaConfig = {
+//   cluster: KafkaClusterConfig;
+//   topics: KafkaTopicsConfig;
+// };
 
 // // `Narrow` utility type is inferred from its usage in the NetworksConfig
 // type ExampleMessageSchema = {
 //   foo: string;
 // };
 // const exampleSchema = z.object({
-//   foo: z.string(),
+//   bar: z.string(),
 // });
+
+// const x: KafkaTopicConfig = {
+//   messageSchema: exampleSchema,
+//   topic: "user.events",
+// };
+
+// const y: KafkaTopicsConfig = {
+//   foo: x
+// }
 
 // // Example usage
 // const exampleConfig: KafkaConfig = {
-//   enabled: true,
 //   topics: {
 //     userEvents: {
-//       messageSchema: exampleSchema,
+//       messageSchema: 1,
 //       topic: "user.events",
 //     },
 //     transactionEvents: {
