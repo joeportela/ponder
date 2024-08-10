@@ -22,14 +22,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Create release pull request or publish to npm
-        id: changesets
-        uses: changesets/action@v1.4.5
-        with:
-          title: "chore: version packages"
-          commit: "chore: version packages"
-          version: pnpm changeset:version
-          publish: pnpm changeset:release
+      - name: Publish to GitHub Packages
+        run: pnpm publish --fiter ./packages/core
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
