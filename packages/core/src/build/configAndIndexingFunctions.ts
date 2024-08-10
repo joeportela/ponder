@@ -1,8 +1,8 @@
-import path from "node:path";
 import { BuildError } from "@/common/errors.js";
 import type { Options } from "@/common/options.js";
 import type { Config } from "@/config/config.js";
 import type { DatabaseConfig } from "@/config/database.js";
+import type { KafkaClusterConfig } from "@/config/kafka.js";
 import {
   type Network,
   getDefaultMaxBlockRange,
@@ -10,11 +10,13 @@ import {
   getRpcUrlsForClient,
   isRpcUrlPublic,
 } from "@/config/networks.js";
+import type { KafkaTopicSchema } from "@/schema/common.js";
 import { buildAbiEvents, buildAbiFunctions, buildTopics } from "@/sync/abi.js";
 import type { BlockSource, ContractSource } from "@/sync/source.js";
 import { chains } from "@/utils/chains.js";
 import { toLowerCase } from "@/utils/lowercase.js";
 import { dedupe } from "@ponder/common";
+import path from "node:path";
 import parse from "pg-connection-string";
 import type { Hex, LogTopic } from "viem";
 import { buildLogFactory } from "./factory.js";
@@ -72,7 +74,9 @@ export async function buildConfigAndIndexingFunctions({
 
       logs.push({
         level: "info",
-        msg: `Using Postgres database '${getDatabaseName(connectionString)}' (${source})`,
+        msg: `Using Postgres database '${getDatabaseName(
+          connectionString,
+        )}' (${source})`,
       });
 
       let schema: string | undefined = undefined;
@@ -85,10 +89,9 @@ export async function buildConfigAndIndexingFunctions({
             "Invalid database configuration: RAILWAY_DEPLOYMENT_ID env var is defined, but RAILWAY_SERVICE_NAME env var is not.",
           );
         }
-        schema = `${process.env.RAILWAY_SERVICE_NAME}_${process.env.RAILWAY_DEPLOYMENT_ID.slice(
-          0,
-          8,
-        )}`;
+        schema = `${
+          process.env.RAILWAY_SERVICE_NAME
+        }_${process.env.RAILWAY_DEPLOYMENT_ID.slice(0, 8)}`;
         source = "from RAILWAY_DEPLOYMENT_ID env var";
       } else {
         schema = "public";
@@ -159,7 +162,9 @@ export async function buildConfigAndIndexingFunctions({
     if (connectionString !== undefined) {
       logs.push({
         level: "info",
-        msg: `Using Postgres database ${getDatabaseName(connectionString)} (${source})`,
+        msg: `Using Postgres database ${getDatabaseName(
+          connectionString,
+        )} (${source})`,
       });
 
       let schema: string | undefined = undefined;
@@ -170,10 +175,9 @@ export async function buildConfigAndIndexingFunctions({
             "Invalid database configuration: RAILWAY_DEPLOYMENT_ID env var is defined, but RAILWAY_SERVICE_NAME env var is not.",
           );
         }
-        schema = `${process.env.RAILWAY_SERVICE_NAME}_${process.env.RAILWAY_DEPLOYMENT_ID.slice(
-          0,
-          8,
-        )}`;
+        schema = `${
+          process.env.RAILWAY_SERVICE_NAME
+        }_${process.env.RAILWAY_DEPLOYMENT_ID.slice(0, 8)}`;
         source = "from RAILWAY_DEPLOYMENT_ID env var";
       } else {
         schema = "public";
@@ -699,9 +703,9 @@ export async function buildConfigAndIndexingFunctions({
       if (!hasRegisteredIndexingFunctions) {
         logs.push({
           level: "debug",
-          msg: `No indexing functions were registered for '${
-            source.name
-          }' ${source.filter.type === "callTrace" ? "call traces" : "logs"}`,
+          msg: `No indexing functions were registered for '${source.name}' ${
+            source.filter.type === "callTrace" ? "call traces" : "logs"
+          }`,
         });
       }
       return hasRegisteredIndexingFunctions;
@@ -732,7 +736,9 @@ export async function buildConfigAndIndexingFunctions({
           throw new Error(
             `Validation failed: Invalid network for block source '${sourceName}'. Got '${
               blockSourceConfig.network
-            }', expected one of [${networks.map((n) => `'${n.name}'`).join(", ")}].`,
+            }', expected one of [${networks
+              .map((n) => `'${n.name}'`)
+              .join(", ")}].`,
           );
         }
 
@@ -858,10 +864,54 @@ export async function buildConfigAndIndexingFunctions({
     });
   }
 
+  let kafkaClusterConfig: KafkaClusterConfig | undefined;
+  if (config.kafkaTopics) {
+    // We have topics defined, so we need to setup Kafka
+    let bootstrapServers: string[];
+    if (config.kafkaCluster?.brokers) {
+      bootstrapServers = config.kafkaCluster.brokers.split(",");
+    } else if (process.env.KAFKA_BOOTSTRAP_SERVERS) {
+      bootstrapServers = process.env.KAFKA_BOOTSTRAP_SERVERS.split(",");
+    } else {
+      throw new Error(
+        "No kafka bootstrap servers defined in config or env var",
+      );
+    }
+
+    let username: string;
+    if (config.kafkaCluster?.sasl?.username) {
+      username = config.kafkaCluster.sasl.username;
+    } else if (process.env.KAFKA_USERNAME) {
+      username = process.env.KAFKA_USERNAME;
+    } else {
+      throw new Error("No kafka username defined in config or env var");
+    }
+
+    let password: string;
+    if (config.kafkaCluster?.sasl?.password) {
+      password = config.kafkaCluster.sasl.password;
+    } else if (process.env.KAFKA_PASSWORD) {
+      password = process.env.KAFKA_PASSWORD;
+    } else {
+      throw new Error("No kafka password defined in config or env var");
+    }
+
+    kafkaClusterConfig = {
+      brokers: bootstrapServers,
+      sasl: {
+        username,
+        password,
+      },
+    };
+  } else {
+    kafkaClusterConfig = undefined;
+  }
+
   return {
     databaseConfig,
     optionsConfig,
     networks: networksWithSources,
+    kafkaClusterConfig,
     sources,
     indexingFunctions,
     logs,
@@ -890,6 +940,7 @@ export async function safeBuildConfigAndIndexingFunctions({
       networks: result.networks,
       indexingFunctions: result.indexingFunctions,
       databaseConfig: result.databaseConfig,
+      kafkaClusterConfig: result.kafkaClusterConfig,
       optionsConfig: result.optionsConfig,
       logs: result.logs,
     } as const;
@@ -903,4 +954,12 @@ export async function safeBuildConfigAndIndexingFunctions({
 function getDatabaseName(connectionString: string) {
   const parsed = (parse as unknown as typeof parse.parse)(connectionString);
   return `${parsed.host}:${parsed.port}/${parsed.database}`;
+}
+
+export function buildKafkaTopicSchema({
+  config,
+}: {
+  config: Config;
+}): KafkaTopicSchema {
+  return config.kafkaTopics;
 }

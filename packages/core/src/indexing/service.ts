@@ -2,7 +2,9 @@ import type { IndexingFunctions } from "@/build/configAndIndexingFunctions.js";
 import type { Common } from "@/common/common.js";
 import type { Network } from "@/config/networks.js";
 import type { IndexingStore } from "@/indexing-store/store.js";
-import type { Schema } from "@/schema/common.js";
+import { type KafkaTopicProducer, buildKafka } from "@/kafka/action.js";
+import type { KafkaService } from "@/kafka/service.js";
+import type { KafkaTopicSchema, Schema } from "@/schema/common.js";
 
 import type { Sync } from "@/sync/index.js";
 import {
@@ -23,6 +25,7 @@ import { prettyPrint } from "@/utils/print.js";
 import { startClock } from "@/utils/timer.js";
 import type { Abi, Address } from "viem";
 import { checksumAddress, createClient } from "viem";
+import type { z } from "zod";
 import type {
   BlockEvent,
   CallTraceEvent,
@@ -41,6 +44,7 @@ export type Context = {
   network: { chainId: number; name: string };
   client: ReadOnlyClient;
   db: Record<string, DatabaseModel<UserRecord>>;
+  kafka: Record<string, KafkaTopicProducer<z.ZodObject<any>>>;
   contracts: Record<
     string,
     {
@@ -90,18 +94,24 @@ export const create = ({
   common,
   sources,
   networks,
+  kafkaService,
   sync,
   indexingStore,
   schema,
+  topicSchema,
 }: {
   indexingFunctions: IndexingFunctions;
   common: Common;
   sources: Source[];
   networks: Network[];
+  kafkaService?: KafkaService;
   sync: Sync;
   indexingStore: IndexingStore;
   schema: Schema;
+  topicSchema: KafkaTopicSchema;
 }): Service => {
+  kafkaService?.setup();
+
   const contextState: Service["currentEvent"]["contextState"] = {
     encodedCheckpoint: undefined!,
     blockNumber: undefined!,
@@ -181,6 +191,8 @@ export const create = ({
     }
   }
 
+  const kafka = buildKafka({ kafkaService, topicSchema });
+
   return {
     common,
     indexingFunctions,
@@ -195,6 +207,7 @@ export const create = ({
         contracts: undefined!,
         client: undefined!,
         db,
+        kafka,
       },
     },
     networkByChainId,

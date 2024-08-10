@@ -1,5 +1,6 @@
 import type { Prettify } from "@/types/utils.js";
 import type { Hex } from "viem";
+import type { z } from "zod";
 import type {
   Column,
   Constraints,
@@ -9,6 +10,7 @@ import type {
   ExtractRequiredColumnNames,
   ExtractTableNames,
   JSONColumn,
+  KafkaTopicSchema,
   ReferenceColumn,
   Scalar,
   ScalarColumn,
@@ -68,5 +70,11 @@ export type InferSchemaType<schema extends Schema | unknown> = {
   [tableName in ExtractTableNames<schema>]: InferTableType<
     schema[tableName],
     schema
+  >;
+};
+
+export type InferKafkaTopicConfig<topicSchema extends KafkaTopicSchema> = {
+  [eventName in keyof topicSchema]: z.infer<
+    topicSchema[eventName]["messageSchema"]
   >;
 };

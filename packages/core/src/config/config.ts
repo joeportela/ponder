@@ -1,6 +1,7 @@
 import type { Prettify } from "@/types/utils.js";
 import type { Abi } from "abitype";
 import type { Narrow, Transport } from "viem";
+import type { z } from "zod";
 import type { GetAddress } from "./address.js";
 import type { GetEventFilter } from "./eventFilter.js";
 import type { NonStrictPick } from "./utilityTypes.js";
@@ -68,6 +69,28 @@ export type NetworkConfig<network> = {
   maxHistoricalTaskConcurrency?: number;
   /** Disable RPC request caching. Default: `false`. */
   disableCache?: boolean;
+};
+
+export type KafkaTopicConfig = {
+  messageSchema: z.ZodObject<z.ZodRawShape>;
+  topic: string;
+};
+
+export type KafkaTopicsConfig<topics> = {} extends topics
+  ? {}
+  : {
+      [eventName in keyof topics]: KafkaTopicConfig;
+    };
+
+type KafkaClusterConfig = {
+  // KAFKA_BOOTSTRAP_SERVERS envvar
+  brokers?: string;
+  sasl?: {
+    // KAFKA_USERNAME envvar
+    username: string;
+    // KAFKA_PASSWORD envvar
+    password: string;
+  };
 };
 
 export type BlockFilterConfig = {
@@ -201,30 +224,39 @@ export const createConfig = <
   const networks,
   const contracts = {},
   const blocks = {},
+  const topics = {},
 >(config: {
   // TODO: add jsdoc to these properties.
   networks: NetworksConfig<Narrow<networks>>;
   contracts?: ContractsConfig<networks, Narrow<contracts>>;
   database?: DatabaseConfig;
+  kafkaCluster?: KafkaClusterConfig;
+  kafkaTopics: KafkaTopicsConfig<topics>;
   options?: OptionsConfig;
   blocks?: BlockFiltersConfig<networks, blocks>;
-}): CreateConfigReturnType<networks, contracts, blocks> =>
-  config as Prettify<CreateConfigReturnType<networks, contracts, blocks>>;
+}): CreateConfigReturnType<networks, contracts, blocks, topics> =>
+  config as Prettify<
+    CreateConfigReturnType<networks, contracts, blocks, topics>
+  >;
 
 export type Config = {
   networks: { [networkName: string]: NetworkConfig<unknown> };
   contracts: { [contractName: string]: GetContract };
   database?: DatabaseConfig;
+  kafkaCluster?: KafkaClusterConfig;
+  kafkaTopics: { [eventName: string]: KafkaTopicConfig };
   options?: OptionsConfig;
   blocks: {
     [sourceName: string]: GetBlockFilter<unknown>;
   };
 };
 
-export type CreateConfigReturnType<networks, contracts, blocks> = {
+export type CreateConfigReturnType<networks, contracts, blocks, topics> = {
   networks: networks;
   contracts: contracts;
   database?: DatabaseConfig;
+  kafkaCluster?: KafkaClusterConfig;
+  kafkaTopics: topics;
   options?: OptionsConfig;
   blocks: blocks;
 };
