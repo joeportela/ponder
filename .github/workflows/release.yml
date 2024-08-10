@@ -23,6 +23,6 @@ jobs:
         run: pnpm build
 
       - name: Publish to GitHub Packages
-        run: pnpm publish --filter ./packages/core
+        run: pnpm publish --filter ./packages/core --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
