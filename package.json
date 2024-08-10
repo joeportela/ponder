@@ -13,6 +13,10 @@
     "test": "pnpm --parallel --no-bail test",
     "typecheck": "pnpm --filter \"./packages/**\" --parallel typecheck"
   },
+  "publishConfig": {
+    "@joeportela:registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.8.1",
     "@changesets/changelog-github": "^0.4.8",
