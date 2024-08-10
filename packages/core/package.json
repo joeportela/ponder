@@ -1,16 +1,16 @@
 {
-  "name": "@joeportela/ponder-core-kafka",
+  "name": "@roux-xyz/ponder-core",
   "version": "0.5.12-alpha.0",
   "description": "An open-source framework for crypto application backends",
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/joeportela/ponder",
+    "url": "https://github.com/roux-xyz/ponder",
     "directory": "packages/core"
   },
   "publishConfig": {
-    "@joeportela:registry": "https://npm.pkg.github.com",
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "files": [
