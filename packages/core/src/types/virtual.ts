@@ -7,8 +7,12 @@ import type {
   SafeFunctionNames,
 } from "@/config/utilityTypes.js";
 import type { ReadOnlyClient } from "@/indexing/ponderActions.js";
-import type { Schema as BuilderSchema } from "@/schema/common.js";
-import type { InferSchemaType } from "@/schema/infer.js";
+import type { KafkaTopicProducer } from "@/kafka/action.js";
+import type {
+  Schema as BuilderSchema,
+  KafkaTopicSchema,
+} from "@/schema/common.js";
+import type { InferKafkaTopicConfig, InferSchemaType } from "@/schema/infer.js";
 import type {
   Block,
   CallTrace,
@@ -159,6 +163,7 @@ export namespace Virtual {
   export type Context<
     config extends Config,
     schema extends BuilderSchema,
+    topicSchema extends KafkaTopicSchema,
     name extends EventNames<config>,
     ///
     sourceName extends ExtractSourceName<name> = ExtractSourceName<name>,
@@ -225,6 +230,11 @@ export namespace Virtual {
         InferSchemaType<schema>[key]
       >;
     };
+    kafka: {
+      [key in keyof InferKafkaTopicConfig<topicSchema>]: KafkaTopicProducer<
+        InferKafkaTopicConfig<topicSchema>[key]
+      >;
+    };
   };
 
   export type Drizzle<schema extends BuilderSchema> = _ApiContext<schema>;
@@ -232,20 +242,25 @@ export namespace Virtual {
   export type IndexingFunctionArgs<
     config extends Config,
     schema extends BuilderSchema,
+    topicSchema extends KafkaTopicSchema,
     name extends EventNames<config>,
   > = {
     event: Event<config, name>;
-    context: Context<config, schema, name>;
+    context: Context<config, schema, topicSchema, name>;
   };
 
   export type Schema<schema extends BuilderSchema> = InferSchemaType<schema>;
 
-  export type Registry<config extends Config, schema extends BuilderSchema> = {
+  export type Registry<
+    config extends Config,
+    schema extends BuilderSchema,
+    topicSchema extends KafkaTopicSchema,
+  > = {
     on: <name extends EventNames<config>>(
       _name: name,
       indexingFunction: (
         args: { event: Event<config, name> } & {
-          context: Prettify<Context<config, schema, name>>;
+          context: Prettify<Context<config, schema, topicSchema, name>>;
         },
       ) => Promise<void> | void,
     ) => void;

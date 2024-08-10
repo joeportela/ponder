@@ -1,3 +1,5 @@
+import type { z } from "zod";
+
 export type Scalar = "string" | "int" | "float" | "boolean" | "hex" | "bigint";
 export type ID = "string" | "int" | "bigint" | "hex";
 
@@ -93,6 +95,13 @@ export type IsTable<a extends Table | Enum> = a extends readonly unknown[]
 
 export type Schema = {
   [name: string]: { table: Table; constraints: Constraints } | Enum;
+};
+
+export type KafkaTopicSchema = {
+  [eventName: string]: {
+    topic: string;
+    messageSchema: z.ZodObject<z.ZodRawShape>;
+  };
 };
 
 export type ExtractTableNames<

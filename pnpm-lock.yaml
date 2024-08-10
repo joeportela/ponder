@@ -504,7 +504,7 @@ importers:
     dependencies:
       forge-std:
         specifier: github:foundry-rs/forge-std
-        version: github.com/foundry-rs/forge-std/c28115db8d90ebffb41953cf83aac63130f4bd40
+        version: github.com/foundry-rs/forge-std/bf6606142994b1e47e2882ce0cd477c020d77623
 
   examples/with-foundry/ponder:
     dependencies:
@@ -695,7 +695,7 @@ importers:
         version: link:../utils
       abitype:
         specifier: ^0.10.2
-        version: 0.10.3(typescript@5.0.4)
+        version: 0.10.3(typescript@5.0.4)(zod@3.23.8)
       better-sqlite3:
         specifier: ^11.1.2
         version: 11.1.2
@@ -735,6 +735,9 @@ importers:
       ink:
         specifier: ^4.4.1
         version: 4.4.1(@types/react@18.2.46)(react@18.2.0)
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       kysely:
         specifier: ^0.26.3
         version: 0.26.3
@@ -771,6 +774,9 @@ importers:
       vite-tsconfig-paths:
         specifier: ^4.3.1
         version: 4.3.1(typescript@5.0.4)(vite@5.0.10)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@types/babel__code-frame':
         specifier: ^7.0.6
@@ -862,7 +868,7 @@ importers:
         version: 4.0.2
       abitype:
         specifier: ^0.10.2
-        version: 0.10.3(typescript@5.0.4)
+        version: 0.10.3(typescript@5.0.4)(zod@3.23.8)
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -4815,7 +4821,7 @@ packages:
       through: 2.3.8
     dev: true
 
-  /abitype@0.10.3(typescript@5.0.4):
+  /abitype@0.10.3(typescript@5.0.4)(zod@3.23.8):
     resolution: {integrity: sha512-tRN+7XIa7J9xugdbRzFv/95ka5ivR/sRe01eiWvM0HWWjHuigSZEACgKa0sj4wGuekTDtghCx+5Izk/cOi78pQ==}
     peerDependencies:
       typescript: '>=5.0.4'
@@ -4827,6 +4833,7 @@ packages:
         optional: true
     dependencies:
       typescript: 5.0.4
+      zod: 3.23.8
 
   /abitype@0.10.3(typescript@5.3.3):
     resolution: {integrity: sha512-tRN+7XIa7J9xugdbRzFv/95ka5ivR/sRe01eiWvM0HWWjHuigSZEACgKa0sj4wGuekTDtghCx+5Izk/cOi78pQ==}
@@ -4945,6 +4952,9 @@ packages:
 
   /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependenciesMeta:
+      ajv:
+        optional: true
     dependencies:
       ajv: 8.12.0
     dev: false
@@ -9685,6 +9695,11 @@ packages:
     engines: {node: '>=12.20'}
     dev: false
 
+  /kafkajs@2.2.4:
+    resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
+    engines: {node: '>=14.0.0'}
+    dev: false
+
   /katex@0.16.9:
     resolution: {integrity: sha512-fsSYjWS0EEOwvy81j3vRA8TEAhQhKiqO+FQaKWp0m39qwOzHVBgAUBIXWj1pB+O2W3fIpNa6Y9KSKCVbfPhyAQ==}
     hasBin: true
@@ -13078,6 +13093,7 @@ packages:
 
   /shikiji@0.6.10:
     resolution: {integrity: sha512-WE+A5Y2ntM5hL3iJQujk97qr5Uj7PSIRXpQfrZ6h+JWPXZ8KBEDhFXc4lqNriaRq1WGOVPUT83XMOzmHiH3W8A==}
+    deprecated: Shikiji is merged back to Shiki v1.0, please migrate over to get the latest updates
     dependencies:
       hast-util-to-html: 9.0.1
     dev: false
@@ -15177,8 +15193,8 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
     dev: false
 
-  github.com/foundry-rs/forge-std/c28115db8d90ebffb41953cf83aac63130f4bd40:
-    resolution: {tarball: https://codeload.github.com/foundry-rs/forge-std/tar.gz/c28115db8d90ebffb41953cf83aac63130f4bd40}
+  github.com/foundry-rs/forge-std/bf6606142994b1e47e2882ce0cd477c020d77623:
+    resolution: {tarball: https://codeload.github.com/foundry-rs/forge-std/tar.gz/bf6606142994b1e47e2882ce0cd477c020d77623}
     name: forge-std
-    version: 1.9.1
+    version: 1.9.2
     dev: false

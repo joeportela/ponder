@@ -1,13 +1,17 @@
 {
   "name": "@ponder/core",
-  "version": "0.5.7",
+  "version": "0.5.7-alpha.0",
   "description": "An open-source framework for crypto application backends",
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ponder-sh/ponder",
+    "url": "https://github.com/joeportela/ponder",
     "directory": "packages/core"
+  },
+  "publishConfig": {
+    "@joeportela:registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   },
   "files": [
     "dist",
@@ -64,6 +68,7 @@
     "graphql-yoga": "^5.3.0",
     "http-terminator": "^3.2.0",
     "ink": "^4.4.1",
+    "kafkajs": "^2.2.4",
     "kysely": "^0.26.3",
     "p-queue": "^7.4.1",
     "pg": "^8.11.3",
@@ -75,7 +80,8 @@
     "stacktrace-parser": "^0.1.10",
     "vite": "^5.0.7",
     "vite-node": "^1.0.2",
-    "vite-tsconfig-paths": "^4.3.1"
+    "vite-tsconfig-paths": "^4.3.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/babel__code-frame": "^7.0.6",

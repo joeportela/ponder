@@ -5,11 +5,12 @@ import type { Common } from "@/common/common.js";
 import { BuildError } from "@/common/errors.js";
 import type { Config, OptionsConfig } from "@/config/config.js";
 import type { DatabaseConfig } from "@/config/database.js";
+import type { KafkaClusterConfig } from "@/config/kafka.js";
 import type { Network } from "@/config/networks.js";
 import type { EventSource } from "@/config/sources.js";
 import { buildGraphQLSchema } from "@/graphql/buildGraphqlSchema.js";
 import type { PonderRoutes } from "@/hono/index.js";
-import type { Schema } from "@/schema/common.js";
+import type { KafkaTopicSchema, Schema } from "@/schema/common.js";
 import { glob } from "glob";
 import type { GraphQLSchema } from "graphql";
 import type { Hono } from "hono";
@@ -22,6 +23,7 @@ import viteTsconfigPathsPlugin from "vite-tsconfig-paths";
 import {
   type IndexingFunctions,
   type RawIndexingFunctions,
+  buildKafkaTopicSchema,
   safeBuildConfigAndIndexingFunctions,
 } from "./configAndIndexingFunctions.js";
 import { vitePluginPonder } from "./plugin.js";
@@ -52,8 +54,10 @@ type BaseBuild = {
   optionsConfig: OptionsConfig;
   sources: EventSource[];
   networks: Network[];
+  kafkaClusterConfig?: KafkaClusterConfig;
   // Schema
   schema: Schema;
+  topicSchema: KafkaTopicSchema;
   graphqlSchema: GraphQLSchema;
 };
 
@@ -664,10 +668,13 @@ const validateAndBuild = async (
     build: {
       buildId,
       databaseConfig: buildConfigAndIndexingFunctionsResult.databaseConfig,
+      kafkaClusterConfig:
+        buildConfigAndIndexingFunctionsResult.kafkaClusterConfig,
       optionsConfig: buildConfigAndIndexingFunctionsResult.optionsConfig,
       networks: buildConfigAndIndexingFunctionsResult.networks,
       sources: buildConfigAndIndexingFunctionsResult.sources,
       schema: buildSchemaResult.schema,
+      topicSchema: buildKafkaTopicSchema(config),
       graphqlSchema,
       indexingFunctions:
         buildConfigAndIndexingFunctionsResult.indexingFunctions,

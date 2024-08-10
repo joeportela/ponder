@@ -10,6 +10,7 @@ import { getReadonlyStore } from "@/indexing-store/readonly.js";
 import { getRealtimeStore } from "@/indexing-store/realtime.js";
 import type { IndexingStore, Status } from "@/indexing-store/store.js";
 import { createIndexingService } from "@/indexing/index.js";
+import { KafkaService } from "@/kafka/service.js";
 import { PostgresSyncStore } from "@/sync-store/postgres/store.js";
 import { SqliteSyncStore } from "@/sync-store/sqlite/store.js";
 import type { SyncStore } from "@/sync-store/store.js";
@@ -56,11 +57,13 @@ export async function run({
   const {
     buildId,
     databaseConfig,
+    kafkaClusterConfig,
     optionsConfig,
     networks,
     sources,
     graphqlSchema,
     schema,
+    topicSchema,
     indexingFunctions,
   } = build;
 
@@ -111,6 +114,18 @@ export async function run({
   // This can be a long-running operation, so it's best to do it after
   // starting the server so the app can become responsive more quickly.
   await database.migrateSyncStore();
+
+  const kafkaService: KafkaService | undefined = kafkaClusterConfig
+    ? new KafkaService({
+        common,
+        clusterConfig: kafkaClusterConfig,
+        topicSchema,
+      })
+    : undefined;
+
+  if (kafkaService) {
+    await kafkaService.setup();
+  }
 
   runCodegen({ common, graphqlSchema });
 
@@ -224,8 +239,10 @@ export async function run({
     indexingStore,
     sources,
     networks,
+    kafkaService,
     syncService,
     schema,
+    topicSchema,
   });
 
   const start = async () => {
