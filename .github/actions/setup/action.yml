@@ -14,6 +14,7 @@ runs:
       uses: actions/setup-node@v3
       with:
         cache: pnpm
+        registry-url: 'https://registry.npmjs.org'
         node-version: 20
 
     - name: Set up foundry
