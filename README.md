@@ -1,9 +1,11 @@
-# Ponder
+# Ponder w/ Kafka publishing
 
 [![CI status][ci-badge]][ci-url]
 [![Version][version-badge]][version-url]
 [![Telegram chat][tg-badge]][tg-url]
 [![License][license-badge]][license-url]
+
+This is a fork of [Ponder](https://github.com/ponder-sh/ponder) with Kafka publishing support.
 
 Ponder is an open-source framework for blockchain application backends.
 
