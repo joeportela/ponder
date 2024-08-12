@@ -868,15 +868,23 @@ export async function buildConfigAndIndexingFunctions({
   if (config.kafkaTopics) {
     // We have topics defined, so we need to setup Kafka
     let bootstrapServers: string[];
+    let source: string;
     if (config.kafkaCluster?.brokers) {
       bootstrapServers = config.kafkaCluster.brokers.split(",");
+      source = "from ponder.config.ts";
     } else if (process.env.KAFKA_BOOTSTRAP_SERVERS) {
       bootstrapServers = process.env.KAFKA_BOOTSTRAP_SERVERS.split(",");
+      source = "from KAFKA_BOOTSTRAP_SERVERS env var";
     } else {
       throw new Error(
         "No kafka bootstrap servers defined in config or env var",
       );
     }
+
+    logs.push({
+      level: "info",
+      msg: `Using Kafka brokers: '${bootstrapServers}' (${source})`,
+    });
 
     let username: string;
     if (config.kafkaCluster?.sasl?.username) {

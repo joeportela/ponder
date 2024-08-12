@@ -45,7 +45,9 @@ export class KafkaService {
   }
 
   async setup(): Promise<void> {
-    const producerTopics = Object.keys(this.topicSchema);
+    const producerTopics = Object.entries(this.topicSchema).map(
+      ([, config]) => config.topic,
+    );
     const serverTopics = await this.admin.listTopics();
     for (const topic of producerTopics) {
       if (!serverTopics.includes(topic)) {
@@ -68,6 +70,7 @@ export class KafkaService {
       service: "kafka",
       msg: "All topics have been created",
     });
+    this.producer.connect();
   }
 
   async send(topic: string, messages: Message[]): Promise<void> {
