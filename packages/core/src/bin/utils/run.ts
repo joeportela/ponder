@@ -302,5 +302,6 @@ export async function run({
     await realtimeQueue.onIdle();
     await startPromise;
     await database.kill();
+    await kafkaService?.kill();
   };
 }

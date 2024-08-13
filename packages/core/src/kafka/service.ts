@@ -73,6 +73,15 @@ export class KafkaService {
     this.producer.connect();
   }
 
+  async kill(): Promise<void> {
+    this.common.logger.info({
+      service: "kafka",
+      msg: "Shutting down Kafka service",
+    });
+    await this.producer.disconnect();
+    await this.admin.disconnect();
+  }
+
   async send(topic: string, messages: Message[]): Promise<void> {
     await this.producer.send({
       topic,
