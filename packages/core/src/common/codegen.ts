@@ -9,11 +9,11 @@ export const ponderEnv = `// This file enables type checking and editor autocomp
 // See https://ponder.sh/docs/getting-started/installation#typescript for more information.
 
 declare module "@/generated" {
-  import type { Virtual } from "@ponder/core";
+  import type { Virtual } from "@roux-xyz/ponder-core";
 
   type config = typeof import("./ponder.config.ts").default;
   type schema = typeof import("./ponder.schema.ts").default;
-  type topicSchema = typeof import("./ponder.config.ts").default.kafka.topics;
+  type topicSchema = typeof import("./ponder.config.ts").default.kafkaTopics;
 
   export const ponder: Virtual.Registry<config, schema, topicSchema>;
 
